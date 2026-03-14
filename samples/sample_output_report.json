@@ -1,0 +1,74 @@
+{
+  "verdict": "PASS",
+  "confidence": 91,
+  "summary": "The PR implements all 6 acceptance criteria from PROJ-123. All OAuth2 flow components are correctly implemented — Google login button, OAuth redirect, callback handling, JWT generation, error handling, and user persistence are all verified in the diff.",
+  "jira_ticket": {
+    "ticket_id": "PROJ-123",
+    "title": "User Authentication — OAuth2 Login with Google",
+    "description": "As a user, I want to log in using my Google account so that I don't need to remember a separate password.",
+    "requirements": [
+      { "id": "AC-1", "description": "A 'Login with Google' button is visible on the login page.", "type": "feature", "priority": "High" },
+      { "id": "AC-2", "description": "Clicking the button redirects the user to Google's OAuth2 consent screen.", "type": "feature", "priority": "High" },
+      { "id": "AC-3", "description": "After successful Google authentication, the user is redirected back to the app.", "type": "feature", "priority": "High" },
+      { "id": "AC-4", "description": "A JWT access token is issued upon successful login.", "type": "feature", "priority": "High" },
+      { "id": "AC-5", "description": "Failed authentication shows a user-friendly error message.", "type": "bug", "priority": "Medium" },
+      { "id": "AC-6", "description": "The user's email and display name are stored in the database on first login.", "type": "feature", "priority": "Medium" }
+    ],
+    "raw_acceptance_criteria": "...",
+    "priority": "High",
+    "status": "In Progress"
+  },
+  "pull_request": {
+    "pr_number": 42,
+    "title": "feat: implement Google OAuth2 login",
+    "description": "This PR adds Google OAuth2 authentication.",
+    "author": "dev-jane",
+    "base_branch": "main",
+    "head_branch": "feature/google-oauth",
+    "state": "open",
+    "commits": [
+      "feat: add Google OAuth2 client configuration",
+      "feat: implement /auth/google route and callback handler",
+      "feat: generate JWT on successful OAuth login",
+      "feat: persist user profile on first login",
+      "fix: show error message on OAuth failure"
+    ],
+    "files_changed": [
+      { "filename": "auth/oauth.py", "status": "added", "additions": 120, "deletions": 0, "patch": "..." },
+      { "filename": "frontend/login.html", "status": "modified", "additions": 8, "deletions": 1, "patch": "..." },
+      { "filename": "db/users.py", "status": "modified", "additions": 22, "deletions": 0, "patch": "..." },
+      { "filename": "tests/test_oauth.py", "status": "added", "additions": 45, "deletions": 0, "patch": "..." }
+    ],
+    "merged": false
+  },
+  "requirement_results": [
+    {
+      "requirement_id": "AC-1",
+      "description": "A 'Login with Google' button is visible on the login page.",
+      "met": true,
+      "confidence": 95,
+      "evidence": [{ "file": "frontend/login.html", "start_line": 14, "end_line": 18, "snippet": "<a href='/auth/google' class='btn-google'>Login with Google</a>", "rationale": "HTML anchor tag styled as a button pointing to the Google OAuth route." }],
+      "notes": "Button is present and linked to the correct route."
+    },
+    {
+      "requirement_id": "AC-4",
+      "description": "A JWT access token is issued upon successful login.",
+      "met": true,
+      "confidence": 97,
+      "evidence": [{ "file": "auth/oauth.py", "start_line": 28, "end_line": 29, "snippet": "access_token = jwt.encode({'sub': user_info['email']}, os.getenv('JWT_SECRET'), algorithm='HS256')", "rationale": "JWT explicitly generated and returned in the JSON response." }],
+      "notes": "JWT properly signed with HS256."
+    }
+  ],
+  "generated_tests": [
+    {
+      "requirement_id": "AC-1",
+      "test_name": "test_google_login_button_visible",
+      "test_code": "def test_google_login_button_visible(client):\n    response = client.get('/login')\n    assert response.status_code == 200\n    assert 'Login with Google' in response.text",
+      "framework": "pytest"
+    }
+  ],
+  "total_requirements": 6,
+  "met_count": 6,
+  "unmet_count": 0,
+  "evaluated_at": "2026-03-15T00:00:00+00:00"
+}

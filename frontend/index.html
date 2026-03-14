@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Jira Ticket Evaluator</title>
+  <meta name="description" content="AI-powered system that automatically evaluates whether a GitHub Pull Request satisfies Jira ticket requirements using multi-agent AI reasoning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ═══ Background ══════════════════════════════════════════════════════════ -->
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- ═══ Nav ═════════════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="brand">
+    <span class="brand-icon">⚡</span>
+    <span class="brand-name">AI Jira Evaluator</span>
+    <span class="badge">Multi-Agent</span>
+  </div>
+  <div class="nav-links">
+    <a href="/api/docs" target="_blank" class="nav-link">API Docs</a>
+    <button class="btn-demo" id="runDemoBtn" onclick="runDemo()">▶ Run Demo</button>
+  </div>
+</nav>
+
+<!-- ═══ Hero ═════════════════════════════════════════════════════════════════ -->
+<header class="hero">
+  <h1>AI-Powered PR <span class="gradient-text">Requirement Validator</span></h1>
+  <p class="hero-sub">Tell me a GitHub PR and Jira ticket — I'll unleash 5 AI agents to verify every requirement.</p>
+
+  <!-- Agent pipeline visualization -->
+  <div class="pipeline">
+    <div class="agent-node" id="node-jira">
+      <div class="node-icon">🎫</div>
+      <div class="node-label">Jira Agent</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="agent-node" id="node-github">
+      <div class="node-icon">🐙</div>
+      <div class="node-label">GitHub Agent</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="agent-node" id="node-analysis">
+      <div class="node-icon">🔍</div>
+      <div class="node-label">Analysis Agent</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="agent-node" id="node-testgen">
+      <div class="node-icon">🧪</div>
+      <div class="node-label">Test Gen Agent</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="agent-node" id="node-verdict">
+      <div class="node-icon">⚖️</div>
+      <div class="node-label">Verdict Agent</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ Input Form ══════════════════════════════════════════════════════════ -->
+<main class="container">
+  <section class="glass-card input-card">
+    <h2 class="section-title">🚀 Evaluate Pull Request</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="prUrl">GitHub PR URL</label>
+        <input
+          id="prUrl"
+          type="url"
+          placeholder="https://github.com/owner/repo/pull/42"
+          value="https://github.com/demo-org/demo-repo/pull/42"
+        />
+      </div>
+      <div class="form-group">
+        <label for="jiraId">Jira Ticket ID</label>
+        <input
+          id="jiraId"
+          type="text"
+          placeholder="PROJ-123"
+          value="PROJ-123"
+        />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary" id="evaluateBtn" onclick="runEvaluation()">
+        <span class="btn-icon">⚡</span>
+        Evaluate Now
+      </button>
+      <button class="btn-secondary" onclick="runDemo()">
+        <span class="btn-icon">🎬</span>
+        Load Demo
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══ Loading State ═════════════════════════════════════════════════════ -->
+  <section class="loading-section" id="loadingSection" style="display:none">
+    <div class="glass-card loading-card">
+      <div class="spinner-ring"></div>
+      <h3 id="loadingTitle">Initializing agents…</h3>
+      <p id="loadingStatus">Spinning up the AI pipeline</p>
+      <div class="agent-progress">
+        <div class="progress-step" id="prog-jira">🎫 Jira Agent</div>
+        <div class="progress-separator">›</div>
+        <div class="progress-step" id="prog-github">🐙 GitHub Agent</div>
+        <div class="progress-separator">›</div>
+        <div class="progress-step" id="prog-analysis">🔍 Analysis Agent</div>
+        <div class="progress-separator">›</div>
+        <div class="progress-step" id="prog-testgen">🧪 Test Gen Agent</div>
+        <div class="progress-separator">›</div>
+        <div class="progress-step" id="prog-verdict">⚖️ Verdict Agent</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Results ══════════════════════════════════════════════════════════ -->
+  <section id="resultsSection" style="display:none">
+
+    <!-- Verdict Banner -->
+    <div class="verdict-banner glass-card" id="verdictBanner">
+      <div class="verdict-left">
+        <div class="verdict-badge" id="verdictBadge"></div>
+        <div class="verdict-meta">
+          <div class="ticket-info" id="ticketInfo"></div>
+          <div class="pr-info" id="prInfo"></div>
+        </div>
+      </div>
+      <div class="verdict-right">
+        <div class="confidence-ring-wrapper">
+          <svg class="confidence-ring" viewBox="0 0 80 80">
+            <circle class="ring-bg" cx="40" cy="40" r="32"/>
+            <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="32"
+              stroke-dasharray="201.06" stroke-dashoffset="201.06"/>
+          </svg>
+          <div class="confidence-label">
+            <span class="conf-num" id="confNum">0</span>
+            <span class="conf-unit">%</span>
+          </div>
+        </div>
+        <div class="conf-title">Confidence</div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="glass-card summary-card">
+      <h3>📋 Executive Summary</h3>
+      <p id="summaryText"></p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card glass-card" id="statTotal">
+        <div class="stat-icon">📊</div>
+        <div class="stat-num" id="statTotalNum">-</div>
+        <div class="stat-label">Requirements</div>
+      </div>
+      <div class="stat-card glass-card" id="statMet">
+        <div class="stat-icon">✅</div>
+        <div class="stat-num" id="statMetNum">-</div>
+        <div class="stat-label">Satisfied</div>
+      </div>
+      <div class="stat-card glass-card" id="statUnmet">
+        <div class="stat-icon">❌</div>
+        <div class="stat-num" id="statUnmetNum">-</div>
+        <div class="stat-label">Missing</div>
+      </div>
+    </div>
+
+    <!-- Requirements breakdown -->
+    <div class="glass-card">
+      <h3>🔍 Requirement-by-Requirement Analysis</h3>
+      <div id="requirementsGrid" class="requirements-grid"></div>
+    </div>
+
+    <!-- Generated Tests -->
+    <div class="glass-card" id="testsCard" style="display:none">
+      <h3>🧪 AI-Generated Validation Tests</h3>
+      <div id="testsGrid" class="tests-grid"></div>
+    </div>
+
+    <!-- Changed Files -->
+    <div class="glass-card">
+      <h3>📁 Changed Files</h3>
+      <div id="filesGrid" class="files-grid"></div>
+    </div>
+
+  </section>
+
+  <!-- ═══ Error ════════════════════════════════════════════════════════════ -->
+  <section id="errorSection" style="display:none">
+    <div class="glass-card error-card">
+      <div class="error-icon">⚠️</div>
+      <h3 id="errorTitle">Something went wrong</h3>
+      <p id="errorMessage"></p>
+      <button class="btn-secondary" onclick="resetUI()">Try Again</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Built for Hackathon 2026 · Powered by Google Gemini + Multi-Agent Architecture</p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

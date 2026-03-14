@@ -1,0 +1,18 @@
+{
+  "key": "PROJ-123",
+  "fields": {
+    "summary": "User Authentication — OAuth2 Login with Google",
+    "description": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [{ "type": "text", "text": "As a user, I want to log in using my Google account so that I don't need to remember a separate password for this application." }]
+        }
+      ]
+    },
+    "priority": { "name": "High" },
+    "status": { "name": "In Progress" },
+    "customfield_10016": "1. A 'Login with Google' button is visible on the login page.\n2. Clicking the button redirects the user to Google's OAuth2 consent screen.\n3. After successful Google authentication, the user is redirected back to the app.\n4. A JWT access token is issued upon successful login.\n5. Failed authentication shows a user-friendly error message.\n6. The user's email and display name are stored in the database on first login."
+  }
+}
